@@ -42,6 +42,8 @@ tmrdatetime = dt.combine(tmrdate, datetime.time(0,0))
 yesterdate = new_date - timedelta(days=1)
 yesterdatetime = dt.combine(yesterdate, datetime.time(0,0))
 
+# compare it to last week
+lastweekdate = new_date - timedelta(days=7)
 
 #########################
 # Creating functions
@@ -95,7 +97,7 @@ def count_trips(city, station, direction, date=new_date):
 # Output: the percentage change from ystd to today
 def difference_in_trips(city, station, direction):
     today_trips = count_trips(city, station, direction, date=new_date)
-    ystd_trips = count_trips(city, station, direction, date=yesterdate)
+    ystd_trips = count_trips(city, station, direction, date=lastweekdate)
     diff = 0 if (ystd_trips==0) else ((today_trips - ystd_trips)/ystd_trips)
     return round(diff)
 

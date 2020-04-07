@@ -24,12 +24,11 @@ from folium_map import changeMapFocus
 
 print("main.py")
 
-app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-# app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.config.suppress_callback_exceptions = True
 baywheels_logo = "https://upload.wikimedia.org/wikipedia/en/thumb/9/95/Bay_Wheels_logo.png/200px-Bay_Wheels_logo.png"
 
-
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.GRID])
+# app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+app.config.suppress_callback_exceptions = True
 #########################
 # Preprocess Data
 #########################
@@ -46,12 +45,17 @@ unique_city = df['start_city'].unique().tolist()
 unique_city.append('All')
 # station filter
 all_stations = list(raw_station_data['name'])
-# all_stations.insert(0, "All")
 
 # get current date and time
 # now = datetime.datetime(2020, 3, 10, 13, 30) # dt.now()
 now = dt.now()
+latest_date = df['start_date'].max()
+minus_year = 5 # 2015 from 2020
 new_date = now - relativedelta(years=5) # if we change current time to 6 years ago
+# make sure that the date is relevant
+while (latest_date <= new_date):
+    new_date = new_date - relativedelta(years=1) # go down to 2014
+
 new_datetime = dt.combine(new_date, datetime.time(0,0))
 
 new_weekday = new_date.weekday()
@@ -164,62 +168,68 @@ navbar = dbc.Navbar(
 #########################
 # Big indicators on performance
 #########################
-row1 = dbc.Row(
-    [dbc.Col(
+row1 = dbc.CardDeck( #dbc.Row(
+    [#dbc.Col(
         dbc.Card(
             dbc.CardBody(
                 [
-                    html.H5(id="trips_completed_number"), 
-                    html.Span(dbc.Badge(id="diff_in_trips_percent", style={'display': 'inline-block'})), 
+                    html.H3(id="trips_completed_number", style={'text-align': 'center'}), 
+                    html.Div(dbc.Badge(id="diff_in_trips_percent", style={'display': 'inline-block', 'float': 'right', 'position': 'top-right'})), 
+                    html.Br(),
                     html.P(
                             id="card1-text",
-                            className="card-text",
+                            className="card-text",style={'text-align': 'center'}
                         ),
                     # indicator graph that was hard to resize
                     # dcc.Graph(id="trips_completed_number",)
-                ]),
-            )
-    ),
-    dbc.Col(dbc.Card(
+                ]), className="pretty_container"
+            ),
+    #),
+    # dbc.Col(
+        dbc.Card(
             dbc.CardBody(
                     [
-                        html.H5(id="trips_in_prog_number"),
+                        html.H3(id="trips_in_prog_number", style={'text-align': 'center'}),
+                        html.Br(),
                         html.P(
                             "Trips in Progress",
-                            className="card-text",
+                            className="card-text",style={'text-align': 'center'}
                         ),
                     ]
-                )
+                ), className="pretty_container"
             ),
-    ),
-    dbc.Col(dbc.Card(
+    # ),
+    # dbc.Col(
+        dbc.Card(
             dbc.CardBody(
                     [
-                        html.H5(id="weather", className="card-title"),
+                        html.H3(id="weather", className="card-title", style={'text-align': 'center'}),
+                        html.Br(),
                         html.P(
                             id="weather-city",
-                            className="card-text",
+                            className="card-text",style={'text-align': 'center'}
                         ),
                     ]
                 )
             ),
-    ),
-    dbc.Col(dbc.Card(
+    # ),
+    # dbc.Col(
+        dbc.Card(
             dbc.CardBody(
                     [
-                        html.H5("Progress of Weekly Performance", className="card-title"),
+                        html.H6("Progress of Weekly Performance", className="card-title"),
                         html.P(children=[
                             html.Span("Average weekly trips taken is: "),
                             html.Strong(str(goalie)),
-                            html.Span(" trips (" + str(len(trips_thisweek)) + " trips now)")]
+                            html.Span(" trips (" + str(len(trips_thisweek)) + " trips so far)")]
                         ),
                         dbc.Progress(str(progress)+"%", value=progress, striped=True),
 
                     ]
                 )
             )
-    )]
-)
+        # )
+    ])
 
 # formatted to the html version but it didn't look presentable
 # row1 = html.Div([
@@ -227,13 +237,14 @@ row1 = dbc.Row(
 #             children=[
 #                 html.Div(
 #                     [
+#                         html.H5(id="trips_completed_number"), 
+#                         html.Span(dbc.Badge(id="diff_in_trips_percent", style={'display': 'inline-block'})), 
 #                         html.H6(
 #                             id="card1-text",
 #                             className="card-text",
 #                         ),
-#                         dcc.Graph(id="trips_completed_number")
 #                     ],
-#                     className="pretty_container"
+#                     className="pretty_container two columns"
 #                 ),
 #                 html.Div(
 #                     [
@@ -242,14 +253,14 @@ row1 = dbc.Row(
 #                             "Trips in Progress"
 #                         ),
 #                     ],
-#                     className="pretty_container"
+#                     className="pretty_container two columns"
 #                 ),
 #                 html.Div(
 #                     [
 #                         html.H5(id="weather", className="card-title"),
 #                         html.H6(id="weather-city"),
 #                     ],
-#                     className="pretty_container"
+#                     className="pretty_container two columns"
 #                 ),
 #                 html.Div(
 #                     [
@@ -261,7 +272,7 @@ row1 = dbc.Row(
 #                         ),
 #                         dbc.Progress(str(progress)+"%", value=progress, striped=True),
 #                     ],
-#                     className="pretty_container"
+#                     className="pretty_container two columns"
 #                 ),
 #             ],
 #             id="fourContainer"
@@ -281,7 +292,9 @@ row2 = dbc.Row(
                 value= 'All',
                 clearable = True,
                 placeholder = "Select a Station"
-            ),], style={'width': '48%', 'display': 'inline-block'}),
+            ),
+            ], style={'width': '45%', 'display': 'inline-block','float': 'left'}
+        ),
         html.Div([
             html.P("Select Direction"),
             dbc.RadioItems(
@@ -293,8 +306,10 @@ row2 = dbc.Row(
                 value= 'both',
                 id="direction-radio",     
                 inline=True,
-            ),], style={'width': '48%', 'display': 'inline-block'}),
-
+            ),
+            ], style={'width': '40%', 'display': 'inline-block','float': 'right'}
+        ),
+        html.Br(),
         html.Br(),
         html.Iframe(id="map", width=820, height=400),
         ], width=6, className="pretty_container", 
@@ -313,15 +328,58 @@ row2 = dbc.Row(
             )
     )])
 
+# row2 = html.Div(
+#     [
+#     html.Div(
+#         [
+#         html.Div([
+#             html.P("Select Station"),
+#             dcc.Dropdown(
+#                 id="station-dropdown",
+#                 value= 'All',
+#                 clearable = True,
+#                 placeholder = "Select a Station"
+#             ),
+#             ], style={'width': '49%', 'display': 'inline-block','float': 'left'}
+#             ),
+#         html.Div([
+#             html.P("Select Direction"),
+#             dbc.RadioItems(
+#                 options=[
+#                     {'label': 'Both', 'value': 'both'},
+#                     {'label': 'Arrival', 'value': 'start'},
+#                     {'label': 'Departure', 'value': 'end'},
+#                     ],
+#                 value= 'both',
+#                 id="direction-radio",     
+#                 inline=True,
+#             ),
+#             ], style={'width': '49%', 'display': 'inline-block', 'float': 'right'}
+#         ),
+#         html.Br(),
+#         html.Iframe(id="map", width=820, height=400),
+#         ], style={'width': '49%', 'display': 'inline-block', 'float': 'left'}, className="pretty_container two columns", 
+#     ),
+#     html.Div(
+#         [
+#         html.Div(
+#             id="patient_volume_card",
+#             children=[
+#                 html.B("Trips Volume across the week"),
+#                 html.P(children=[
+#                     html.Span(id="hm-text"),
+#                     html.Strong(str(start_HM_date) + " to " + str(end_HM_date) + " (Today)")]
+#                     ),
+#                 html.Hr(),
+#                 dcc.Graph(id="trips_volume_hm"),
+#             ],
+#             )], style={'width': '49%', 'display': 'inline-block', 'float': 'right'}, className="pretty_container two columns"
+#     )]
+# )
 # Row 3: Data Table and the Line Graph prediction
 
 # prediction line graph
 today_73 = status_73[(status_73['time']<tmrdatetime)&(status_73['time']>=new_datetime)]
-# print(today_73.head())
-# print(today_73.describe())
-# today_67 = status_67[(status_67['time']<tmrdatetime)&(status_67['time']>=new_datetime)]
-# ystd_67 =  status_67[(status_67['time']<new_datetime)&(status_67['time']>=yesterdatetime)]
-# lastweek_67 = status_67[(status_67['time']<(new_datetime-timedelta(days=7)))&(status_67['time']>=yesterdatetime-timedelta(days=7))]
 
 docks_73 = raw_station_data[raw_station_data["id"]==73]['dock_count'].values[0]
 rounded_time = new_date - datetime.timedelta(minutes=new_date.minute % 10,
@@ -330,15 +388,27 @@ rounded_time = new_date - datetime.timedelta(minutes=new_date.minute % 10,
 
 current_bikes = today_73[today_73['time']==rounded_time]['bikes_available']
 capacity = round((current_bikes.values[0]/docks_73)*100)
+till_now_73 = today_73[today_73['time'] <= new_date]
+pred_73 = today_73[today_73['time'] > new_date]
 
 # this was using Plotly Go Figure, but it wasn''t as flexible
 fig = go.Figure()
+# actual
 fig.add_trace(
     go.Scatter(
-        x=today_73['time'].dt.time, 
-        y=today_73['bikes_available'], 
+        x=till_now_73['time'].dt.time, 
+        y=till_now_73['bikes_available'], 
         name="Today", 
         line_color='deepskyblue'
+        )
+    )
+# pred
+fig.add_trace(
+    go.Scatter(
+        x=pred_73['time'].dt.time, 
+        y=pred_73['bikes_available'], 
+        name="Predicted", 
+        line_color='firebrick'
         )
     )
 # fig.add_shape( # error loading layout
@@ -358,91 +428,95 @@ fig.add_trace(
 # doesn't work too
 # fig.add_trace(go.Scatter(x=[new_date.time], y=[0], name='Current Time',
 #                          line=dict(color='blue', dash='dashdot'))) # current time
+
 fig.update_layout(
-    title_text='Prediction of the Number of bikes at Grant Avenue at Columbus Avenue',
-    xaxis = dict(constrain="domain"),
-    )
-
-def bikes_avail_data(station):
-    data = [
-        dict(
-            type='scatter',
-            mode='lines+markers',
-            name='Bikes Available Today',
-            x=list(today_73['time'].dt.time),
-            y=list(today_73['bikes_available']),
-            line=dict(
-                shape="spline",
-                smoothing=2,
-                width=1,
-            ),
-            # marker=dict(symbol='diamond-open')
-        )
-    ]
-    layout = dict(
-        autosize=True,
-        automargin=True,
-        margin=dict(
-            l=30,
-            r=30,
-            b=20,
-            t=40
-        ),
-        hovermode="closest",
-        plot_bgcolor="#F9F9F9",
-        paper_bgcolor="#F9F9F9",
-        legend=dict(font=dict(size=10), orientation='h'),
-        title='Prediction of Bikes Available at ' + station,
-        # shapes=[ # doesn't let me plot my layout after doing this
-        # {'type': 'line',
-        #            'xref': 'x',
-        #            'yref': 'y',
-        #            'x0': new_date.time,
-        #            'y0': 0,
-        #            'x1': new_date.time,
-        #            'y1': docks_73,
-        #            'line': dict(
-        #             color="MediumPurple",
-        #             dash="dot")
-        # }]
-
-    )
-    # layout_line.update(vline=new_date.time)
-    figure = dict(data=data, layout=layout)
-    # figure.add_shape( # doesn't have this ability
-    #     # Line Diagonal
-    #         type="line",
-    #         x0=new_date.time,
-    #         y0=0,
-    #         x1=new_date.time,
-    #         y1=docks_73, # extend throughout
-    #         line=dict(
-    #             color="MediumPurple",
-    #             width=4,
-    #             dash="dot",
-    #         )
-    # )
-    return figure
+    title_text='Prediction of the Number of bikes at Grant Avenue at Columbus Avenue',    
+   xaxis_title='Time',
+   yaxis_title='Bikes available at station (docks = ' + str(docks_73)+')',
+   xaxis = dict(constrain="domain"),
+   )
 
 bikes_avail = dcc.Graph( 
         id='bikes_avail',
         figure = fig, #bikes_avail_data("Market at 10th")
     )
 
+# # using the traditional way - switched to Figure go instead
+# def bikes_avail_data(station):
+#     data = [
+#         dict(
+#             type='scatter',
+#             mode='lines+markers',
+#             name='Bikes Available Today',
+#             x=list(today_73['time'].dt.time),
+#             y=list(today_73['bikes_available']),
+#             line=dict(
+#                 shape="spline",
+#                 smoothing=2,
+#                 width=1,
+#             ),
+#             # marker=dict(symbol='diamond-open')
+#         )
+#     ]
+#     layout = dict(
+#         autosize=True,
+#         automargin=True,
+#         margin=dict(
+#             l=30,
+#             r=30,
+#             b=20,
+#             t=40
+#         ),
+#         hovermode="closest",
+#         plot_bgcolor="#F9F9F9",
+#         paper_bgcolor="#F9F9F9",
+#         legend=dict(font=dict(size=10), orientation='h'),
+#         title='Prediction of Bikes Available at ' + station,
+#         # shapes=[ # doesn't let me plot my layout after doing this
+#         # {'type': 'line',
+#         #            'xref': 'x',
+#         #            'yref': 'y',
+#         #            'x0': new_date.time,
+#         #            'y0': 0,
+#         #            'x1': new_date.time,
+#         #            'y1': docks_73,
+#         #            'line': dict(
+#         #             color="MediumPurple",
+#         #             dash="dot")
+#         # }]
+
+#     )
+#     # layout_line.update(vline=new_date.time)
+#     figure = dict(data=data, layout=layout)
+#     # figure.add_shape( # doesn't have this ability
+#     #     # Line Diagonal
+#     #         type="line",
+#     #         x0=new_date.time,
+#     #         y0=0,
+#     #         x1=new_date.time,
+#     #         y1=docks_73, # extend throughout
+#     #         line=dict(
+#     #             color="MediumPurple",
+#     #             width=4,
+#     #             dash="dot",
+#     #         )
+#     # )
+#     return figure
+
 #########################
 # status Tables and Prediction
 #########################
 row3 = dbc.Row(
     [
-        # dbc.Col([
-        html.Div([
+        dbc.Col([
+        # html.Div([
             html.B(id="table-name"),
             html.Hr(), 
             html.P(id="benchmark-info"),    
             dcc.Graph(id="stations-table"),
-            ], id="hide-table", className="pretty_container",
+            ], id="hide-table", #className="pretty_container two columns",
         ),
-        dbc.Col(bikes_avail, width = 5),
+        dbc.Col(bikes_avail, className="pretty_container two columns", width = 5),
         dbc.Col(
             [
             dbc.Row(dbc.Card(
@@ -454,7 +528,7 @@ row3 = dbc.Row(
                         ),
                         html.P("Current Bikes Available", className="card-title"),
                     ]
-                ), color="info", outline=True, id="67-bikes")),
+                ), color="info", outline=True, id="67-bikes"), className="pretty_container",),
             html.Br(),
             dbc.Row(dbc.Card(
             dbc.CardBody(
@@ -462,14 +536,13 @@ row3 = dbc.Row(
                         html.H5(str(capacity) + "%", style={'textalign': 'center'},),
                         html.P("Dock Capacity", className="card-title"),
                     ]
-                ), color="info", outline=True, id="67-cap")
-                ),
-            ],
-        width = 1)
+                ), color="info", outline=True, id="67-cap"), className="pretty_container two columns")
+            ], width = 1
+        )
     ]
-    )
+)
 
-cards = html.Div([row1, row2, row3])
+cards = html.Div([row1, html.Br(), row2, row3])
 
 
 app.layout = html.Div(
@@ -478,6 +551,7 @@ app.layout = html.Div(
     cards,
     ]
 )
+
 
 ##### CALLBACKS ######
 
@@ -493,12 +567,9 @@ def set_cities_options(selected_city):
 
     else:
         that_city = station_cities[selected_city]
-        # print(that_city)
         options_stations = [{'label': i['name'], 'value': i['name']} for i in sorted(that_city, key=lambda x: x['name'])]
-        # print(options_stations)
         options_stations.insert(0, {'label': 'All', 'value': 'All'})
         return options_stations
-        # return [{'label': i['name'], 'value': i['name']} for i in sorted(that_city, key=lambda x: x['name'])]
 
 # dynamic stations from City
 @app.callback(
@@ -542,7 +613,7 @@ def update_trips_completed(city, station, direction):
     # badge colour and formatting of the percentage
     if (diff_in_trips_percent<0):
         colour = "danger"
-        diff_in_trips_percent = "-" + str(diff_in_trips_percent) +"%"
+        diff_in_trips_percent = str(diff_in_trips_percent) +"%"
     elif (diff_in_trips_percent ==0):
         colour = "warning"
         diff_in_trips_percent = str(diff_in_trips_percent) +"%"
@@ -604,10 +675,12 @@ def update_map(city, station, direction):
     ],
 )
 def update_heatmap(city, station, direction):
-    if (station=="All"):
+    if ((station=="All") &(city=="All")):
         text1 = "Trips taken today compared to the trips over the past week: "
+    elif ((station=="All") &(city!="All")):
+        text1 = "Trips taken today at " + str(city) + " compared to the trips over the past week: "
     elif (direction == "both"):
-        text1 = "Trips started and ended from" + str(station) + " today compared to the trips over the past week: "
+        text1 = "Trips started and ended from " + str(station) + " today compared to the trips over the past week: "
     elif (direction == "start"):
         text1 = "Trips started from " + str(station) + " today compared to the trips over the past week: "
     else:
@@ -628,7 +701,7 @@ def update_stationtable(city, station, direction):
         stations_table, benchmark = get_status_table()
 
         figure = go.Figure(data=[go.Table(
-            columnwidth = [200 ,100, 100, 10, 200 ,100, 100],
+            columnwidth = [200 ,100, 100, 40, 200 ,100, 100],
             header=
                 dict(values=list(stations_table.columns),
                 # lightgreen: #90EE90   
@@ -661,16 +734,17 @@ def update_stationtable(city, station, direction):
                 )   
             ])
             return figure, "Status Outlook coming soon" , ""
-        
-        return figure, text1, benchmark_info        
-            
+
+        return figure, text1, benchmark_info
+    
     # specific stations data
     else:
         text1 = "Trips taken to and from " + str(station)
         
         print("specific station")
         routes_data = get_routes(city, station, direction)
-    
+        benchmark_info = ""
+        print(routes_data.info())
         figure = go.Figure(data=[go.Table(header=dict(values=list(routes_data.columns),
                                             fill_color='paleturquoise',
                                             align='center'),
@@ -678,7 +752,8 @@ def update_stationtable(city, station, direction):
                                                 # values=[routes_data["Start Station"], routes_data["End Station"], routes_data["Count"], routes_data["Average Duration (mins)"]],
                                                 values=[routes_data[col] for col in routes_data.columns],
                                                 align='left'))])
-        return figure, text1
+
+        return figure, text1, benchmark_info
     
 @app.callback(
     [Output("bikes_avail", "style"),
@@ -704,7 +779,6 @@ def open_table(city, station):
     # if specific station
     else:        
         return {'display': 'block'}
-    
    
 
 if __name__ == "__main__":
